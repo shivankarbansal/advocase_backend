@@ -10,6 +10,7 @@ const caseSchema = new mongoose.Schema({
     type: Number,
     required: [true, "A case must have a Case Number"],
     trim: true,
+    unique: true,
   },
   caseType: {
     type: String,
