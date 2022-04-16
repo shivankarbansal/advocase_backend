@@ -44,8 +44,16 @@ const caseSchema = new mongoose.Schema({
   },
   caseNotes: [
     {
-      type: String,
-      trim: true,
+      title: {
+        type: String,
+        required: [true, "A note title is required"],
+        trim: true,
+      },
+      body: {
+        type: String,
+        required: [true, "A note body is required"],
+        trim: true,
+      },
     },
   ],
 });

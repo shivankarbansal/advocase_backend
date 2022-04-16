@@ -7,9 +7,14 @@ router
   .route("/")
   .get(caseController.getAllCases)
   .post(caseController.createCase);
+router.route("/notes").patch(caseController.updateNotes);
 router
   .route("/:id")
   .get(caseController.getCaseById)
   .patch(caseController.updateCase)
   .delete(caseController.deleteCase);
+router
+  .route("/notes/:id")
+  .get(caseController.getAllNotes)
+  .patch(caseController.addNotes);
 module.exports = router;
