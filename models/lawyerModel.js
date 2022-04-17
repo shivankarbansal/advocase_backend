@@ -42,19 +42,5 @@ lawyerSchema.methods.generateAuthToken = async function (){
     await lawyer.save();
     return token;
 }
-lawyerSchema.statics.findByEmail = async (email)=>{
-    const lawyer = await Lawyer.findOne({email});
-    if(!lawyer){
-        throw new Error('User not found!');
-    }
-    return lawyer;
-}
-lawyerSchema.statics.findByPhone = async (phoneNumber)=>{
-    const lawyer = await Lawyer.findOne({phoneNumber});
-    if(!lawyer){
-        throw new Error('User not found!');
-    }
-    return lawyer;
-}
 const Lawyer = mongoose.model("Lawyer",lawyerSchema);
 module.exports = Lawyer;
