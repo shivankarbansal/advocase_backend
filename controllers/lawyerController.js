@@ -1,5 +1,7 @@
 const Lawyer = require('../models/lawyerModel');;
-const nodemailer = require('nodemailer');
+const sendEmail = require('../functions/sendEmail');
+const sendSms = require('../functions/sendMessage');
+const generateOtp = require('../functions/generateOtp');
 const crypto = require('crypto');
 const dotenv = require("dotenv");
 const validator = require('validator');
@@ -9,23 +11,8 @@ exports.otpSignupEmail = async (req,res)=>{
     try {
         var email;
 
-        var otp = Math.random();
-        otp = otp * 1000000;
-        otp = parseInt(otp);
-        console.log(otp);
+        var otp = generateOtp();
 
-        let transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
-            service : 'Gmail',
-            
-            auth: {
-                user: process.env.YOUR_EMAIL,
-                pass: process.env.YOUR_PASSWORD
-            }
-            
-        });
         email=req.body.email;
         let lawyer = await Lawyer.findOne({email:req.body.email});
         if(lawyer!=null){
@@ -42,15 +29,7 @@ exports.otpSignupEmail = async (req,res)=>{
             html: "<h3>OTP for account verification is </h3>"  + "<h1 style='font-weight:bold;'>" + otp +"</h1>"
         };
         
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                return console.log(error);
-            }
-            console.log('Message sent: %s', info.messageId);   
-            console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-    
-            res.render('otp');
-        });
+        sendEmail(mailOptions);
 
         var data = ""+otp;
         const hash = crypto.createHmac("sha256",key).update(data).digest("hex");
@@ -69,22 +48,7 @@ exports.otpSignupPhone = async (req,res)=>{
             throw new Error("Enter a valid Mobile Number");
         }
         var phoneNumber = "+91" + req.body.phoneNumber;
-        var otp = Math.random();
-        otp = otp * 1000000;
-        otp = parseInt(otp);
-        console.log(otp);
-        const accountSid = process.env.TWILIO_ACCOUNT_SID;
-        const authToken = process.env.TWILIO_AUTH_TOKEN;
-
-        const sendSms = (phone, message) => {
-        const client = require('twilio')(accountSid, authToken);
-        client.messages.create({
-            body: message,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: phone
-            }).then(message => console.log(message.sid));
-        }
-        
+        var otp = generateOtp();
         const message = "OTP for account verification is " + otp;
         console.log(phoneNumber);
         sendSms(phoneNumber, message);
@@ -105,39 +69,14 @@ exports.otpLogin = async (req,res)=>{
             if(lawyer === null){
                 throw new Error("User not found");
             }
-            var otp = Math.random();
-            otp = otp * 1000000;
-            otp = parseInt(otp);
-            console.log(otp);
-
-            let transporter = nodemailer.createTransport({
-                host: "smtp.gmail.com",
-                port: 465,
-                secure: true,
-                service : 'Gmail',
-                
-                auth: {
-                user: process.env.YOUR_EMAIL,
-                pass: process.env.YOUR_PASSWORD
-                }
-                
-            });
-            
+            var otp = generateOtp();
             var mailOptions={
                 to: email,
                 subject: "Otp for login is: ",
                 html: "<h3>OTP for account verification is </h3>"  + "<h1 style='font-weight:bold;'>" + otp +"</h1>" 
             };
             
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    return console.log(error);
-                }
-                console.log('Message sent: %s', info.messageId);   
-                console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-        
-                res.render('otp');
-            });
+            sendEmail(mailOptions);
 
             var data = ""+otp;
             const hash = crypto.createHmac("sha256",key).update(data).digest("hex");
@@ -150,22 +89,7 @@ exports.otpLogin = async (req,res)=>{
                 throw new Error("User not found");
             }
             phoneNumber = "+91"+input;
-            var otp = Math.random();
-            otp = otp * 1000000;
-            otp = parseInt(otp);
-            console.log(otp);
-            const accountSid = process.env.TWILIO_ACCOUNT_SID;
-            const authToken = process.env.TWILIO_AUTH_TOKEN;
-
-            const sendSms = (phone, message) => {
-            const client = require('twilio')(accountSid, authToken);
-            client.messages.create({
-                body: message,
-                from: process.env.TWILIO_PHONE_NUMBER,
-                to: phone
-                }).then(message => console.log(message.sid));
-            }
-            
+            var otp = generateOtp();
             const message = "OTP for account verification is " + otp;
             sendSms(phoneNumber, message);
             var data = ""+otp;
@@ -205,5 +129,95 @@ exports.Login = async (req,res)=>{
         res.send({lawyer,token});
     } catch (error) {
         res.status(400).send();
+    }
+}
+exports.myProfile = async (req,res)=>{
+    try {
+        res.send(req.lawyer);
+    } catch (error) {
+        res.status(400).send();
+    }
+}
+exports.Logout = async (req,res)=>{
+    try {
+        req.lawyer.tokens = req.lawyer.tokens.filter((token)=>{
+            return token.token !== req.token;
+        })
+        await req.lawyer.save();
+        res.status(201).send();
+    } catch (error) {
+        res.status(500).send()
+    }
+}
+exports.otpUpdatePhone = async (req,res)=>{
+    try {
+        var otp = generateOtp();
+        var mailOptions={
+            to: req.lawyer.email,
+            subject: "Phone number change",
+            html: "<h3>OTP for phone number update is </h3>"  + "<h1 style='font-weight:bold;'>" + otp +"</h1>" 
+        };
+        sendEmail(mailOptions);
+        var data = ""+otp;
+        const hash = crypto.createHmac("sha256",key).update(data).digest("hex");
+        res.status(201).send({hash:hash});
+    } catch (error) {
+        res.status(400).send();
+    }
+}
+exports.otpUpdateEmail = async (req,res)=>{
+    try {
+        var otp = generateOtp();
+        const message = "OTP for email account change is " + otp;
+        sendSms("+91"+req.lawyer.phoneNumber, message);
+        var data = ""+otp;
+        const hash = crypto.createHmac("sha256",key).update(data).digest("hex");
+        res.status(201).send({hash:hash});
+    } catch (error) {
+        res.status(400).send();
+    }
+}
+exports.updatePhone = async (req,res)=>{
+    try {
+        if(!validator.isMobilePhone(req.body.phoneNumber)){
+            throw new Error("Enter a valid mobile number");
+        }
+        req.lawyer.phoneNumber = req.body.phoneNumber;
+        await req.lawyer.save();
+        res.send(req.lawyer);
+    } catch (error) {
+        res.send(error.message);
+    }
+}
+exports.updateEmail = async (req,res)=>{
+    try {
+        if(!validator.isEmail(req.body.email)){
+            throw new Error("Enter a valid email address");
+        }
+        req.lawyer.email = req.body.email;
+        await req.lawyer.save();
+        res.send(req.lawyer);
+    } catch (error) {
+        res.send(error.message);
+    }
+}
+exports.otpDelete = async (req,res)=>{
+    var otp = generateOtp();
+    var mailOptions={
+        to: req.lawyer.email,
+        subject: "Delete Account",
+        html: "<h3>OTP to delete your account is </h3>"  + "<h1 style='font-weight:bold;'>" + otp +"</h1>" 
+    };
+    sendEmail(mailOptions);
+    var data = ""+otp;
+    const hash = crypto.createHmac("sha256",key).update(data).digest("hex");
+    res.status(201).send({hash:hash});
+}
+exports.Delete = async (req,res)=>{
+    try {
+        await req.lawyer.remove()
+        res.send(req.lawyer)
+    } catch (error) {
+        res.status(500).send()
     }
 }
