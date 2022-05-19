@@ -39,6 +39,7 @@ exports.createCase = async (req, res) => {
   try {
     const newCase = await Case.create(req.body);
     res.status(201).json({
+      status: "success",
       data: {
         case: newCase,
       },

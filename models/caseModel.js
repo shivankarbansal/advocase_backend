@@ -41,6 +41,12 @@ const caseSchema = new mongoose.Schema({
     required: [true, "A case must have an adverse party advocate number"],
     trim: true,
   },
+  caseStatus: {
+    type: String,
+    enum: ["open", "closed", "upcoming"],
+    required: true,
+    trim: true,
+  },
   caseNotes: [
     {
       title: {
