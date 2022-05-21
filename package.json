@@ -16,6 +16,7 @@
     "moment": "^2.29.2",
     "mongoose": "^6.2.10",
     "morgan": "^1.10.0",
+    "node-fetch": "^2.6.7",
     "nodemailer": "^6.7.3",
     "twilio": "^3.76.1",
     "validator": "^13.7.0"
