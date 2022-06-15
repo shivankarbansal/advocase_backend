@@ -16,6 +16,7 @@
     "moment": "^2.29.2",
     "mongoose": "^6.2.10",
     "morgan": "^1.10.0",
+    "node-fetch": "^2.6.7",
     "nodemailer": "^6.7.3",
     "passport": "^0.5.2",
     "passport-google-oauth20": "^2.0.0",

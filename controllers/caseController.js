@@ -42,6 +42,7 @@ exports.createCase = async (req, res) => {
       owner:req.lawyer._id
     });
     res.status(201).json({
+      status: "success",
       data: {
         case: newCase,
       },
