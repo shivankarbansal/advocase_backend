@@ -10,8 +10,6 @@ if (process.env.NODE_ENV == "development") {
 }
 
 app.use(express.json());
-
 app.use("/api/v1/cases", caseRouter);
 app.use(lawyerRouter)
-
 module.exports = app;

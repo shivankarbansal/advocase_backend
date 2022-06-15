@@ -55,6 +55,11 @@ const caseSchema = new mongoose.Schema({
       },
     },
   ],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required:true,
+    ref: 'Lawyer'
+  }
 });
 
 const Case = mongoose.model("Case", caseSchema);

@@ -35,6 +35,11 @@ const lawyerSchema = new mongoose.Schema({
         }
     }]
 })
+lawyerSchema.virtual('cases',{
+    ref:'Case',
+    localField:'_id',
+    foreignField:'owner'
+})
 lawyerSchema.methods.generateAuthToken = async function (){
     const lawyer = this;
     const token = jwt.sign({_id:lawyer._id.toString()},"advocasestuff");

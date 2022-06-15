@@ -37,7 +37,10 @@ exports.getCaseById = async (req, res) => {
 
 exports.createCase = async (req, res) => {
   try {
-    const newCase = await Case.create(req.body);
+    const newCase = await Case.create({
+      ...req.body,
+      owner:req.lawyer._id
+    });
     res.status(201).json({
       data: {
         case: newCase,
