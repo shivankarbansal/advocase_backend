@@ -7,7 +7,10 @@ router
   .route("/")
   .get(auth, caseController.getAllCases)
   .post(auth, caseController.createCase);
-router.route("/notes").patch(auth, caseController.updateNotes);
+router
+  .route("/notes")
+  .patch(auth, caseController.updateNotes)
+  .delete(auth, caseController.deleteNotes);
 router
   .route("/:id")
   .get(auth, caseController.getCaseById)

@@ -230,3 +230,42 @@ exports.updateNotes = async (req, res) => {
     });
   }
 };
+
+exports.deleteNotes = async (req, res) => {
+  try {
+    const note = await Case.findOneAndUpdate(
+      {
+        _id: req.query.caseId,
+        owner: req.lawyer._id,
+        "caseNotes._id": req.query.id,
+      },
+      {
+        $pull: {
+          caseNotes: { _id: req.query.id },
+        },
+      },
+      {
+        runValidators: true,
+        new: true,
+      }
+    );
+    if (!note) {
+      res.status(200).json({
+        status: "fail",
+        message: "Note or Case not found",
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        data: {
+          note,
+        },
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      status: "error",
+      message: err.message,
+    });
+  }
+};
