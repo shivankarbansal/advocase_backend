@@ -7,7 +7,7 @@ router
   .route("/")
   .get(auth, caseController.getAllCases)
   .post(auth, caseController.createCase);
-router.route("/notes").patch(caseController.updateNotes);
+router.route("/notes").patch(auth, caseController.updateNotes);
 router
   .route("/:id")
   .get(auth, caseController.getCaseById)
@@ -15,6 +15,6 @@ router
   .delete(auth, caseController.deleteCase);
 router
   .route("/notes/:id")
-  .get(caseController.getAllNotes)
-  .patch(caseController.addNotes);
+  .get(auth, caseController.getAllNotes)
+  .patch(auth, caseController.addNotes);
 module.exports = router;

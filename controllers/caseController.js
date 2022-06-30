@@ -128,8 +128,11 @@ exports.deleteCase = async (req, res) => {
 
 exports.addNotes = async (req, res) => {
   try {
-    const note = await Case.findByIdAndUpdate(
-      req.params.id,
+    const note = await Case.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        owner: req.lawyer._id,
+      },
       {
         $push: { caseNotes: req.body },
       },
@@ -138,12 +141,20 @@ exports.addNotes = async (req, res) => {
         new: true,
       }
     );
-    res.status(200).json({
-      status: "success",
-      data: {
-        note,
-      },
-    });
+
+    if (!note) {
+      res.status(200).json({
+        status: "fail",
+        message: "Case not found",
+      });
+    } else {
+      res.status(200).json({
+        status: "success",
+        data: {
+          note,
+        },
+      });
+    }
   } catch (err) {
     res.status(404).json({
       status: "error",
@@ -154,14 +165,25 @@ exports.addNotes = async (req, res) => {
 
 exports.getAllNotes = async (req, res) => {
   try {
-    const foundCase = await Case.findById(req.params.id);
-    const notes = foundCase.caseNotes;
-    res.status(200).json({
-      status: "success",
-      data: {
-        notes,
-      },
+    const foundCase = await Case.findOne({
+      _id: req.params.id,
+      owner: req.lawyer._id,
     });
+
+    if (!foundCase) {
+      res.status(200).json({
+        status: "fail",
+        message: "Case not found",
+      });
+    } else {
+      const notes = foundCase.caseNotes;
+      res.status(200).json({
+        status: "success",
+        data: {
+          notes,
+        },
+      });
+    }
   } catch (err) {
     res.status(404).json({
       status: "error",
@@ -173,7 +195,11 @@ exports.getAllNotes = async (req, res) => {
 exports.updateNotes = async (req, res) => {
   try {
     const note = await Case.findOneAndUpdate(
-      { _id: req.query.caseId, "caseNotes._id": req.query.id },
+      {
+        _id: req.query.caseId,
+        owner: req.lawyer._id,
+        "caseNotes._id": req.query.id,
+      },
       {
         $set: {
           "caseNotes.$": req.body,
@@ -184,10 +210,10 @@ exports.updateNotes = async (req, res) => {
         new: true,
       }
     );
-    if (note == null) {
-      res.status(404).json({
-        status: "error",
-        message: "Note not found, Check note id",
+    if (!note) {
+      res.status(200).json({
+        status: "fail",
+        message: "Note or Case not found",
       });
     } else {
       res.status(200).json({
@@ -199,7 +225,7 @@ exports.updateNotes = async (req, res) => {
     }
   } catch (err) {
     res.status(400).json({
-      status: "asdf",
+      status: "error",
       message: err.message,
     });
   }
