@@ -2,7 +2,8 @@ const Case = require("./../models/caseModel");
 
 exports.getAllCases = async (req, res) => {
   try {
-    const cases = await Case.find();
+    const cases = await Case.find({ owner: req.lawyer._id });
+    // await req.lawyer.populate("cases").execPopulate();
     return res.status(200).json({
       status: "success",
       results: cases.length,
@@ -20,13 +21,26 @@ exports.getAllCases = async (req, res) => {
 
 exports.getCaseById = async (req, res) => {
   try {
-    const foundCase = await Case.findById(req.params.id);
-    res.status(200).json({
-      status: "success",
-      data: {
-        case: foundCase,
-      },
+    const foundCase = await Case.findOne({
+      _id: req.params.id,
+      owner: req.lawyer._id,
     });
+
+    console.log(req.params.id);
+
+    if (foundCase) {
+      res.status(200).json({
+        status: "success",
+        data: {
+          case: foundCase,
+        },
+      });
+    } else {
+      res.status(200).json({
+        status: "fail",
+        message: "Case not found",
+      });
+    }
   } catch (err) {
     res.status(404).json({
       status: "error",
@@ -39,7 +53,7 @@ exports.createCase = async (req, res) => {
   try {
     const newCase = await Case.create({
       ...req.body,
-      owner:req.lawyer._id
+      owner: req.lawyer._id,
     });
     res.status(201).json({
       status: "success",
@@ -57,16 +71,28 @@ exports.createCase = async (req, res) => {
 
 exports.updateCase = async (req, res) => {
   try {
-    const updatedCase = await Case.findByIdAndUpdate(req.params.id, req.body, {
-      runValidators: true,
-      new: true,
-    });
-    res.status(200).json({
-      status: "success",
-      data: {
-        case: updatedCase,
-      },
-    });
+    const updatedCase = await Case.findOneAndUpdate(
+      { _id: req.params.id, owner: req.lawyer._id },
+      req.body,
+      {
+        runValidators: true,
+        new: true,
+      }
+    );
+
+    if (updatedCase) {
+      res.status(200).json({
+        status: "success",
+        data: {
+          case: updatedCase,
+        },
+      });
+    } else {
+      return res.status(404).json({
+        status: "error",
+        message: "Case not found",
+      });
+    }
   } catch (err) {
     res.status(404).json({
       status: "error",
@@ -77,11 +103,21 @@ exports.updateCase = async (req, res) => {
 
 exports.deleteCase = async (req, res) => {
   try {
-    await Case.findByIdAndDelete(req.params.id);
-    res.status(204).json({
-      status: "success",
-      data: null,
+    const deletedCase = await Case.findOneAndDelete({
+      _id: req.params.id,
+      owner: req.lawyer._id,
     });
+    if (deletedCase) {
+      res.status(204).json({
+        status: "success",
+        data: null,
+      });
+    } else {
+      res.status(404).json({
+        status: "fail",
+        data: null,
+      });
+    }
   } catch (err) {
     res.status(404).json({
       status: "error",
