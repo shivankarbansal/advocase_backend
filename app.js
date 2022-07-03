@@ -16,5 +16,4 @@ app.use("/api/v1/cases", caseRouter);
 app.use(lawyerRouter);
 app.use("/api/v1/news", newsRouter);
 app.use('/api/v1/events', eventRoutes);
-
 module.exports = app;
